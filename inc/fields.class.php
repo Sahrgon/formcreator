@@ -113,6 +113,30 @@ class PluginFormcreatorFields
    }
 
    /**
+    * Encode the fields values
+    * 
+    * @param   Array       $values     Reference to an Array of fields values (id => value)
+    */
+   public static function encodeValues(&$values)
+   {
+      foreach ($values as &$value) {
+        if (is_array($value)) {
+          foreach ($value as &$sub_value) {
+            $sub_value = plugin_formcreator_encode($sub_value);
+          }
+        } elseif (is_array(json_decode($value))) {
+          $tab = json_decode($value);
+          foreach ($tab as &$sub_value) {
+            $sub_value = plugin_formcreator_encode($sub_value);
+          }
+          $value = json_encode($tab);
+        } else {
+          $value = plugin_formcreator_encode($value);
+        }
+      }
+   }
+   
+   /**
     * Check if a field should be shown or not
     *
     * @param   Integer     $id         ID of the current question
@@ -129,6 +153,8 @@ class PluginFormcreatorFields
 
       // If the field is always shown
       if ($fields['show_rule'] == 'always') return true;
+      
+      self::encodeValues($values);
 
       // Get conditions to show or hide field
       $query = "SELECT `show_logic`, `show_field`, `show_condition`, `show_value`
